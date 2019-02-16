@@ -13,7 +13,7 @@ app.get('/css/styles.css', function(req, res) {
 
 app.post('/ttt', urlencodedParser, function (req, res) {
   if (!req.body) return res.sendStatus(400);
-  console.log(`Hello ${req.destroy.name}, $` + getDate());
+  console.log(createHelloMsg(req.body.name));
 });
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));
@@ -24,4 +24,8 @@ function getDate() {
   var month = (date.getMonth() + 1 < 10) ? ('0' + (date.getMonth() + 1)) : date.getMonth() + 1;
   var day = (date.getDate() < 10) ? ('0' + date.getDate()) : date.getDate();
   return year + '-' + month + '-' + day;
+}
+
+function createHelloMsg(name) {
+  return `Hello $${name}, $` + getDate();
 }
