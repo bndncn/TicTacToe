@@ -2,18 +2,38 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
 const port = 80;
+app.set('view engine', 'ejs');
+var urlencodedParser = bodyParser.urlencoded({
+  extended: false
+});
 
-var urlencodedParser = bodyParser.urlencoded({ extended: false });
+// app.get('/ttt', (req, res) => res.sendFile('pages/index.ejs', {
+//   root: __dirname
+// }));
 
-app.get('/ttt', (req, res) => res.sendFile('index.html', { root: __dirname}));
+app.get('/ttt', function (req, res) {
+  res.render('pages/index')
+})
 
-app.get('/css/styles.css', function(req, res) {
-  res.sendFile('css/styles.css', { root: __dirname})
+app.get('/css/styles.css', function (req, res) {
+  res.sendFile('css/styles.css', {
+    root: __dirname
+  })
+});
+
+app.get('/controllers/board_controller.js', function (req, res) {
+  res.sendFile('/controllers/board_controller.js', {
+    root: __dirname
+  })
 });
 
 app.post('/ttt', urlencodedParser, function (req, res) {
   if (!req.body) return res.sendStatus(400);
-  console.log(createHelloMsg(req.body.name));
+  var helloMsg = createHelloMsg(req.body.name);
+  console.log(helloMsg);
+  res.render('pages/ttt_game', {
+    hellomsg: helloMsg
+  })
 });
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));

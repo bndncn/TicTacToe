@@ -3,3 +3,9 @@ body {
     color: blue;
     background-color: orange;
 }
+
+td {
+    border: 1px solid black;
+    height: 50px;
+    width: 50px;
+}
