@@ -2,10 +2,10 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
 const port = 80;
+
 app.set('view engine', 'ejs');
-var urlencodedParser = bodyParser.urlencoded({
-  extended: false
-});
+app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: true }))
 
 // app.get('/ttt', (req, res) => res.sendFile('pages/index.ejs', {
 //   root: __dirname
@@ -27,7 +27,7 @@ app.get('/controllers/board_controller.js', function (req, res) {
   })
 });
 
-app.post('/ttt', urlencodedParser, function (req, res) {
+app.post('/ttt', function (req, res) {
   if (!req.body) return res.sendStatus(400);
   var helloMsg = createHelloMsg(req.body.name);
   console.log(helloMsg);
