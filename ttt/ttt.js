@@ -1,182 +1,173 @@
 const BOARD_SIZE = 3;
 
-class TTTBoard {
-    // grid is an array denoting the board's current state
-    constructor(grid) {
-        this.grid = grid;
-    }
-
-    checkRows() {
-        for (var i = 0; i < BOARD_SIZE; i++) {
-            var hasWon = true;
-            var start = BOARD_SIZE * i;
-
-            while (start < BOARD_SIZE * (i + 1) - 1 && hasWon) {
-                
-                if (this.grid[start] == ' ' || this.grid[start] != this.grid[start + 1]) {
-                    hasWon = false;
-                }     
-
-                start++;          
-            }
-
-            if (hasWon)
-                return this.grid[start];
-        }
-        return ' '; // No one has won yet
-    }
-
-    checkCols() {
-        for (var i = 0; i < BOARD_SIZE; i++) {
-            var hasWon = true;
-            var start = i;
-
-            while (start < i + BOARD_SIZE * (BOARD_SIZE - 1) && hasWon) {
-               
-                if (this.grid[start] == ' ' || this.grid[start] != this.grid[start + BOARD_SIZE]) {
-                    hasWon = false;
-                }   
-
-                start += BOARD_SIZE;                
-            }
-
-            if (hasWon)
-                return this.grid[BOARD_SIZE * i];
-        }
-        return ' '; // No one has won yet
-    }
-    
-    checkDiagonals() {
-        // Left-Right Diagonal
-        var i = 0;
+function checkRows(grid) {
+    for (var i = 0; i < BOARD_SIZE; i++) {
         var hasWon = true;
+        var start = BOARD_SIZE * i;
 
-        while (i < BOARD_SIZE * BOARD_SIZE - 1 && hasWon) {
+        while (start < BOARD_SIZE * (i + 1) - 1 && hasWon) {
             
-            if (this.grid[i] == ' ' || this.grid[i] != this.grid[i + BOARD_SIZE + 1]) {
+            if (grid[start] == ' ' || grid[start] != grid[start + 1]) {
                 hasWon = false;
-            }  
+            }     
 
-            i += BOARD_SIZE + 1;                
+            start++;          
         }
 
         if (hasWon)
-            return this.grid[i];
-
-        // Right-Left Diagonal
-        i = BOARD_SIZE - 1;
-        hasWon = true;
-        
-        while (i < BOARD_SIZE * (BOARD_SIZE - 1) && hasWon) {
-            
-            if (this.grid[i] == ' ' && this.grid[i] == this.grid[i + BOARD_SIZE - 1]) {
-                hasWon = false;
-            }  
-                       
-            i += BOARD_SIZE - 1;                
-        }
-
-        if (hasWon)
-            return this.grid[i];
-
-        return ' '; // No one has won yet        
+            return grid[start];
     }
-
-    getWinner() {
-        var winner = this.checkRows();
-        if (winner == ' ') winner = this.checkCols();
-        if (winner == ' ') winner = this.checkDiagonals();   
-        return winner;         
-    }
-
-    isGameDone() {
-        if (this.getWinner() != ' ')
-            return true;
-
-        return !this.isWinPossible('X') && !this.isWinPossible('O');
-    }
-
-    isWinPossible(player) {
-        var temp = this.grid;
-        var a = this.grid.slice(0);
-        this.grid = a;
-   
-        for (var i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) 
-            if (a[i] == ' ')
-                a[i] = player;  
-                
-        var possible =  this.getWinner(a) == player;
-        this.grid = temp;
-        return possible
-    }
+    return ' '; // No one has won yet
 }
 
-class TTTBoardNode {
-    
-    // A TTTBoard object
-    constructor(board, currentTurn) {
-        this.board = board;
-        this.currentTurn = currentTurn;
-        this.children = [];
-        this.probabilities = new TTTProbabilities();
+function checkCols(grid) {
+    for (var i = 0; i < BOARD_SIZE; i++) {
+        var hasWon = true;
+        var start = i;
+
+        while (start < i + BOARD_SIZE * (BOARD_SIZE - 1) && hasWon) {
+            
+            if (grid[start] == ' ' || grid[start] != grid[start + BOARD_SIZE]) {
+                hasWon = false;
+            }   
+
+            start += BOARD_SIZE;                
+        }
+
+        if (hasWon)
+            return grid[BOARD_SIZE * i];
     }
+    return ' '; // No one has won yet
+}
     
-    buildTree() {
-        this._buildTree(this, this.currentTurn);
+function checkDiagonals(grid) {
+    // Left-Right Diagonal
+    var i = 0;
+    var hasWon = true;
+
+    while (i < BOARD_SIZE * BOARD_SIZE - 1 && hasWon) {
+        
+        if (grid[i] == ' ' || grid[i] != grid[i + BOARD_SIZE + 1]) {
+            hasWon = false;
+        }  
+
+        i += BOARD_SIZE + 1;                
     }
 
-    _buildTree(node, turn) {
-        var currentBoard = node.board;
+    if (hasWon)
+        return grid[i];
 
-        if (!currentBoard.isGameDone()) {
-            for (var i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
-                if (currentBoard.grid[i] == ' ') {
-                    var nextGrid = currentBoard.grid.slice(0);
-                    nextGrid[i] = turn;
-                    var nextBoard = new TTTBoard(nextGrid);
-                    var nextNode = new TTTBoardNode(nextBoard);
+    // Right-Left Diagonal
+    i = BOARD_SIZE - 1;
+    hasWon = true;
+    
+    while (i < BOARD_SIZE * (BOARD_SIZE - 1) && hasWon) {
+        
+        if (grid[i] == ' ' && grid[i] == grid[i + BOARD_SIZE - 1]) {
+            hasWon = false;
+        }  
+                    
+        i += BOARD_SIZE - 1;                
+    }
 
-                    node.children.push(nextNode);
-                    this._buildTree(nextNode, this.getNextTurn(turn));
+    if (hasWon)
+        return grid[i];
 
+    return ' '; // No one has won yet        
+}
 
-                }
-            }
+function numTurns(grid) {
+    var turns = 0;
+    for (var i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
+        if (grid[i] != ' ')
+            turns++;
+    }
+    return turns;
+}
+
+function getWinner(grid) {
+    var winner = checkRows(grid);
+    if (winner == ' ') winner = checkCols(grid);
+    if (winner == ' ') winner = checkDiagonals(grid);   
+    return winner;         
+}
+
+function isGameDone(grid) {
+    if (getWinner(grid) != ' ')
+        return true;
+
+    return !isWinPossible(grid, 'X') && !isWinPossible(grid, 'O');
+}
+
+function isWinPossible(grid, player) {
+    var temp = grid.slice(0);
+   
+    for (var i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) 
+        if (temp[i] == ' ')
+            temp[i] = player;  
+                
+    return getWinner(temp) == player;
+
+}
+
+function bestAIMove(grid) {
+    if (grid[4] == ' ')
+        grid[4] = 'O'; // If center is empty, place an O there
+    else if (numTurns(grid) == 1 && grid[4] == 'X')
+        grid[0] = 'O'; // If X starts in the center, choose a corner
+    else if (numTurns(grid) == 3 && grid[4] == 'X' && grid[8] == 'X')
+        grid[6] = 'O';
+    else {
+        var win = findWin(grid);
+        if (win != null) {
+            grid = win;
         }
         else {
-            var winner = currentBoard.getWinner();
-           
-            if (winner == 'X')
-                this.probabilities.xWin++;
-            else if (winner == 'O')
-                this.probabilities.oWin++;
-            else
-                this.probabilities.draw++;
+            var blockWin = findWin(grid);
+            if (win != null) {
+                grid = win;
+            }
+            else {
+                selectRandom(grid);
+            }  
+        }      
+    }
+    
+}
 
-            this.probabilities.numGames++;
-          
+function findWin(grid) {
+    for (var i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
+        var temp = grid.slice(0);
+        temp[i] = 'O'; 
+
+        if (getWinner(temp) == 'O')
+            return temp;
+    }
+    return null;
+} 
+
+function blockWin(grid) {
+    for (var i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
+        var temp = grid.slice(0);
+        temp[i] = 'X'; 
+
+        if (getWinner(temp) == 'X') {
+            temp[i] = 'O'; 
+            return temp;
         }
     }
+    return null;
+}
 
-    getNextTurn(turn) {
-        if (turn == 'X') return 'O';
-        else if (turn == 'O') return 'X';
-        return ' ';
+function selectRandom(grid) {
+    for (var i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
+        if (grid[i] == ' ') {
+            grid[i] = 'O'; 
+            return;
+        }
     }
 }
 
-class TTTProbabilities {
-
-    constructor() {
-        this.xWin = 0;
-        this.oWin = 0;
-        this.draw = 0;
-        this.numGames = 0;
-    }
-
-}
-
-var a = new TTTBoardNode(new TTTBoard([ "X", " ", " "," ", " ", " ", " ", " ", " "]), "O")
-
-a.buildTree();
-console.log(a.probabilities)
+var grid = ['X', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '];
+bestAIMove(grid);
+console.log(grid)
