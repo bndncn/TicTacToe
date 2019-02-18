@@ -196,8 +196,11 @@ function bestAIMove(grid) {
     if (isGameDone(grid))
         return getWinner(grid);
     
+<<<<<<< HEAD
     return ' ';
     
+=======
+>>>>>>> f2fdba1dac549c33fc4b92733f77505a76432dcc
 }
 
 function findWin(grid) {
@@ -234,4 +237,8 @@ function selectRandom(grid) {
             return;
         }
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> f2fdba1dac549c33fc4b92733f77505a76432dcc
