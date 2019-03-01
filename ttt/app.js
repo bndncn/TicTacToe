@@ -7,10 +7,6 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
-// app.get('/ttt', (req, res) => res.sendFile('pages/index.ejs', {
-//   root: __dirname
-// }));
-
 app.get('/ttt', function (req, res) {
   res.render('pages/index')
 })
@@ -196,11 +192,8 @@ function bestAIMove(grid) {
     if (isGameDone(grid))
         return getWinner(grid);
     
-<<<<<<< HEAD
     return ' ';
     
-=======
->>>>>>> f2fdba1dac549c33fc4b92733f77505a76432dcc
 }
 
 function findWin(grid) {
@@ -237,8 +230,5 @@ function selectRandom(grid) {
             return;
         }
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> f2fdba1dac549c33fc4b92733f77505a76432dcc
+
