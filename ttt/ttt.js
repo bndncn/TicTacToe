@@ -1,3 +1,15 @@
+function getDate() {
+    var date = new Date();
+    var year = date.getFullYear();
+    var month = (date.getMonth() + 1 < 10) ? ('0' + (date.getMonth() + 1)) : date.getMonth() + 1;
+    var day = (date.getDate() < 10) ? ('0' + date.getDate()) : date.getDate();
+    return year + '-' + month + '-' + day;
+}
+  
+function createHelloMsg(name) {
+    return `Hello $${name}, $` + getDate();
+}
+
 const BOARD_SIZE = 3;
 
 function checkRows(grid) {
@@ -109,7 +121,7 @@ function isWinPossible(grid, player) {
 
 }
 
-export function bestAIMove(grid) {
+function bestAIMove(grid) {
     if (isGameDone(grid))
         return getWinner(grid);
     
@@ -167,3 +179,6 @@ function selectRandom(grid) {
         }
     }
 }
+
+module.exports.bestAIMove = bestAIMove;
+module.exports.createHelloMsg = createHelloMsg;
