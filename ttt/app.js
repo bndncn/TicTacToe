@@ -7,7 +7,7 @@ const CryptoJS = require("crypto-js");
 
 var Schema = mongoose.Schema;
 
-var dbURL = 'mongodb://localhost:27017/test';
+var dbURL = 'mongodb://localhost:27017/ttt';
 mongoose.connect(dbURL, { useNewUrlParser: true });
 
 var userSchema = new Schema({
@@ -58,7 +58,7 @@ app.get('/node_modules/jquery/dist/jquery.min.js', function (req, res) {
 app.post('/adduser', function (req, res) {
     if (!req.body) return res.sendStatus(400);
     var key = crypto.randomBytes(32).toString('hex');
-    var hash = CryptoJS.AES.encrypt(req.body.password, key);
+    var hash = CryptoJS.AES.encrypt(req.body.password, key).toString();
     
     var user = {
         username: req.body.username,
@@ -71,13 +71,7 @@ app.post('/adduser', function (req, res) {
     console.log(user);
 
     var data = new UserModel(user);
-    data.save()
-    .then(item => {
-    res.send("item saved to database");
-    })
-    .catch(err => {
-    res.status(400).send("unable to save to database");
-    });
+    data.save();
 });
 
 app.post('/ttt', function (req, res) {

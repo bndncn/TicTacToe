@@ -1,5 +1,5 @@
 $(document).ready(function() {
-    $('#login').submit( function () {    
+    $('#add').submit( function () {    
         $.ajax({   
             type: 'POST',
             data : $(this).serialize(),
@@ -10,4 +10,3 @@ $(document).ready(function() {
         });    
     });
 });
-
