@@ -1,0 +1,13 @@
+$(document).ready(function() {
+    $('#login').submit( function () {    
+        $.ajax({   
+            type: 'POST',
+            data : $(this).serialize(),
+            url: '/../adduser',   
+            success: function(data){
+                $("#results").html(data);                       
+            }   
+        });    
+    });
+});
+
