@@ -5,11 +5,10 @@ const mongoose = require('mongoose');
 const crypto = require('crypto');
 const CryptoJS = require("crypto-js");
 
-var Schema = mongoose.Schema;
-
 var dbURL = 'mongodb://localhost:27017/ttt';
 mongoose.connect(dbURL, { useNewUrlParser: true });
 
+var Schema = mongoose.Schema;
 var userSchema = new Schema({
     username: String,
     hash: String,
@@ -18,7 +17,7 @@ var userSchema = new Schema({
     verified: Boolean
 });
 
-var UserModel = mongoose.model('Users', userSchema);
+var User = mongoose.model('Users', userSchema);
 
 const app = express();
 const port = 80;
@@ -67,20 +66,46 @@ app.post('/adduser', function (req, res) {
         key: key,
         verified: false        
     }
-
     console.log(user);
-
-    var data = new UserModel(user);
+    var data = new User(user);
     data.save();
 });
 
-app.post('/ttt', function (req, res) {
+app.post('/verify', function (req, res) {
     if (!req.body) return res.sendStatus(400);
-    var helloMsg = ttt.createHelloMsg(req.body.name);
-    console.log(helloMsg);
-    //res.render('pages/ttt_game', {
-    //    hellomsg: helloMsg
-    //});
+    var email = req.body.email;
+    var key = req.body.key;
+
+    User.find({email: email})
+        .then(function(user){
+            if (key == user[0].key) {
+                user[0].verified = true;
+                user[0].save();
+                console.log(email + " has been successfully verified")
+            }
+            else 
+                console.log('Failed to Validate');
+        })
+        .catch(err => console.log('Unable to find email'));
+});
+
+app.post('/ttt', function (req, res) {
+    var body = req.body;
+
+    if (body.hasOwnProperty('key')) {
+        var email = req.body.email;
+        var key = req.body.key;
+        User.find({email: email})
+        .then(function(user){
+            if (key == user[0].key) {
+                res.render('pages/index');
+            }
+        })
+        .catch();
+    }
+    else if (body.hasOwnProperty('email')) {
+        res.render('pages/verify');
+    }
 });
 
 app.post('/ttt/play', function (req, res) {
@@ -92,3 +117,4 @@ app.post('/ttt/play', function (req, res) {
 });
 
 app.listen(port, () => console.log(`Listening on port ${port}!`));
+

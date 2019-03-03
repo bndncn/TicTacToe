@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <link rel="stylesheet" href="css/styles.css">
+    </head>
+
+    <body>
+        <form id="verify" action="" method="post">
+            <header>
+                <h3>Verify Email</h3>
+            </header>   
+
+            <div>
+                <label for="email">Email</label>
+                <div>
+                    <input type="text" id="email" name="email">
+                </div> 
+            </div>            
+            
+            <div>
+                <label for="key">Key</label>
+                <div>
+                    <input type="text" id="key" name="key">
+                </div> 
+            </div>
+            
+            <div>
+                <input type="submit" value="Verify">
+            </div>
+        </form>       
+    </body>
+
+    <script src='../../node_modules/jquery/dist/jquery.min.js'></script>
+    <script src='../../controllers/form_controller.js'></script>
+</html>
