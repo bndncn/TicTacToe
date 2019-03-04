@@ -44,18 +44,22 @@ function emailKey(email, key) {
     });
 }
 
+app.post('/logout', async function (req, res) {
+    if (req.cookies.token) {
+        console.log('clearing cookie');
+        res.clearCookie('token');
+        res.send(JSON.stringify(OK_STATUS));
+    } else {
+        console.log('logout without valid cookie');
+        res.send(JSON.stringify(ERROR_STATUS));
+    }
+});
+
 app.get('/ttt', async function (req, res) {
     if (req.cookies.token) {
         console.log('token = ' + req.cookies.token);
         var cookieQuery = User.find({ key: req.cookies.token });
         var cookieResult = await cookieQuery.exec();
-
-        // if user somehow has invalid token, just for testing now
-        if (cookieResult.length == 0) {
-            console.log('somehow bad token');
-            return res.send(JSON.stringify(ERROR_STATUS));
-        }
-
         var helloMsg = ttt.createHelloMsg(cookieResult[0].username);
         console.log(helloMsg);
         res.render('pages/ttt_game', {
@@ -97,7 +101,7 @@ app.post('/adduser', async function (req, res) {
     var password = req.body.password;
     var email = req.body.email;
 
-    var usernameQuery = User.find({ username: username });      
+    var usernameQuery = User.find({ username: username });
     var usernameResult = await usernameQuery.exec();
 
     // Check if username is already used
@@ -106,10 +110,10 @@ app.post('/adduser', async function (req, res) {
         return res.send(JSON.stringify(ERROR_STATUS));
     }
 
-    var emailQuery = User.find({ email: email });      
+    var emailQuery = User.find({ email: email });
     var emailResult = await emailQuery.exec();
     console.log();
-    
+
     // Check if email is already used
     if (emailResult.length > 0) {
         console.log(email + ' has been already used. Please use a different email.');
@@ -123,11 +127,11 @@ app.post('/adduser', async function (req, res) {
         hash: hash,
         email: email,
         key: key,
-        verified: false        
+        verified: false
     }
-    
+
     console.log(user);
-    
+
     var data = new User(user);
     data.save();
     emailKey(req.body.email, key);
@@ -155,10 +159,10 @@ app.post('/verify', async function (req, res) {
             return res.send(JSON.stringify(OK_STATUS));
         }
         else {
-            console.log('Failed to Validate'); 
-            return res.send(JSON.stringify(ERROR_STATUS));  
-        }   
-    } 
+            console.log('Failed to Validate');
+            return res.send(JSON.stringify(ERROR_STATUS));
+        }
+    }
 });
 
 app.post('/login', async function (req, res) {
@@ -178,7 +182,7 @@ app.post('/login', async function (req, res) {
             console.log('Please verify your account');
             return res.send(JSON.stringify(ERROR_STATUS));
         }
-        
+
         var bytes = CryptoJS.AES.decrypt(usernameResult[0].hash.toString(), usernameResult[0].key);
         var decryptedPassword = bytes.toString(CryptoJS.enc.Utf8);
 
@@ -201,10 +205,10 @@ app.post('/ttt', async function (req, res) {
     if (body.hasOwnProperty('key')) {
         var email = req.body.email;
         var key = req.body.key;
-        
-        var emailQuery = User.find({email: email});
+
+        var emailQuery = User.find({ email: email });
         var emailResult = await emailQuery.exec();
-        
+
         if (emailResult.length > 0) {
             // Go back to home page if verification is successful
             if (key == emailResult[0].key || key == 'abracadabra') {
@@ -212,29 +216,29 @@ app.post('/ttt', async function (req, res) {
             }
             else {
                 return res.render('pages/verify');
-            }            
+            }
         }
         else {
             return res.render('pages/verify');
-        } 
+        }
     }
     // If Sign Up form was submitted
     else if (body.hasOwnProperty('email')) {
         var username = req.body.username;
-        var email = req.body.email;   
+        var email = req.body.email;
 
-        var usernameQuery = User.find({ username: username });      
+        var usernameQuery = User.find({ username: username });
         var usernameResult = await usernameQuery.exec();
-    
+
         // Go back to home page if username is already used
         if (usernameResult.length > 0 && usernameResult[0].verified) {
             return res.render('pages/index');
         }
-       
-	var emailQuery = User.find({ email: email });      
+
+        var emailQuery = User.find({ email: email });
         var emailResult = await emailQuery.exec();
-        
-	// Go back to home page if email is already used
+
+        // Go back to home page if email is already used
         if (emailResult.length > 0 && emailResult[0].verified) {
             return res.render('pages/index');
         }
@@ -247,7 +251,7 @@ app.post('/ttt', async function (req, res) {
     else {
         var username = req.body.username;
         var password = req.body.password;
-        
+
         var usernameQuery = User.find({ username: username });
         var usernameResult = await usernameQuery.exec();
 
@@ -258,14 +262,14 @@ app.post('/ttt', async function (req, res) {
 
             var bytes = CryptoJS.AES.decrypt(usernameResult[0].hash.toString(), usernameResult[0].key);
             var decryptedPassword = bytes.toString(CryptoJS.enc.Utf8);
-    
+
             var helloMsg = ttt.createHelloMsg(username);
             console.log(helloMsg);
 
             if (decryptedPassword === password) {
                 return res.render('pages/ttt_game', {
                     hellomsg: helloMsg
-                });                
+                });
             }
             else {
                 return res.render('pages/index');
