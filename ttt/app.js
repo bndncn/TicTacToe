@@ -90,63 +90,51 @@ app.get('/node_modules/jquery/dist/jquery.min.js', function (req, res) {
     });
 });
 
-app.post('/adduser', async (req, res) => {
-    console.log('post adduser');
-
+app.post('/adduser', async function (req, res) {
     if (!req.body) return res.sendStatus(400);
 
+    var username = req.body.username;
+    var password = req.body.password;
+    var email = req.body.email;
+
+    var usernameQuery = User.find({ username: username });      
+    var usernameResult = await usernameQuery.exec();
+
     // Check if username is already used
-
-    try {
-        console.log('pre find username');
-        let user1 = await User.find({ username: req.body.username });
-        console.log('post find username')
-        if (Array.isArray(user1) && user1.length) {
-            console.log('user1 = ');
-            console.log(user1);
-            console.log(req.body.username + ' is already taken. Please type a different username.');
-            throw 'Error';
-        }
-
-        // Check if email is already used
-        console.log('pre find email');
-        let user2 = await User.find({ email: req.body.email });
-        console.log('post find email');
-        if (Array.isArray(user2) && user2.length) {
-            console.log('user2 = ');
-            console.log(user2);
-            console.log(req.body.email + ' has been used already. Please use a different email.');
-            throw 'Error';
-        }
-        console.log('enter create user');
-
-        var key = crypto.randomBytes(32).toString('hex');
-        var hash = CryptoJS.AES.encrypt(req.body.password, key);
-
-        console.log('has = ' + hash);
-        var user = {
-            username: req.body.username,
-            hash: hash,
-            email: req.body.email,
-            key: key,
-            verified: false
-        }
-
-        // console.log(user);
-
-        var data = new User(user);
-        data.save();
-        // emailKey(req.body.email, key);
-
-        res.send(JSON.stringify(OK_STATUS));
-    } catch (err) {
+    if (usernameResult.length > 0) {
+        console.log(username + ' is already taken. Please type in a different username.');
         return res.send(JSON.stringify(ERROR_STATUS));
     }
+
+    var emailQuery = User.find({ email: email });      
+    var emailResult = await emailQuery.exec();
+    console.log(emailResult);
+    
+    // Check if email is already used
+    if (emailResult.length > 0) {
+        console.log(email + ' has been already used. Please use a different email.');
+        return res.send(JSON.stringify(ERROR_STATUS));
+    }
+    var key = crypto.randomBytes(32).toString('hex');
+    var hash = CryptoJS.AES.encrypt(req.body.password, key);
+
+    var user = {
+        username: username,
+        hash: hash,
+        email: email,
+        key: key,
+        verified: false        
+    }
+    
+    console.log(user);
+    
+    var data = new User(user);
+    data.save();
+    emailKey(req.body.email, key);
+    res.send(JSON.stringify(OK_STATUS));
 });
 
-app.post('/verify', function (req, res) {
-    console.log('post verify');
-
+app.post('/verify', async function (req, res) {
     if (!req.body) return res.sendStatus(400);
     var email = req.body.email;
     var key = req.body.key;
@@ -180,7 +168,6 @@ app.post('/login', async function (req, res) {
         var bytes = CryptoJS.AES.decrypt(usernameResult[0].hash.toString(), usernameResult[0].key);
         var decryptedPassword = bytes.toString(CryptoJS.enc.Utf8);
 
-
         if (decryptedPassword === password) {
             console.log('Logging in');
             res.cookie('token', usernameResult[0].key);
@@ -192,7 +179,6 @@ app.post('/login', async function (req, res) {
         }
     }
 });
-
 app.post('/ttt', function (req, res) {
     console.log('post ttt');
 
