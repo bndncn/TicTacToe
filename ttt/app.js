@@ -26,6 +26,19 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+
+var sendmail = require('sendmail')();
+
+sendmail({
+  from: 'ubuntu@cse356.compas.cs.stonybrook.edu',
+  to: 'hee2gs+b71ibvc0sh2x0@sharklasers.com',
+  subject: 'Tic Tac Toe Account Verification',
+  html: 'Dear User, you must verify your TTT account with the following key'
+}, function (err, reply) {
+  console.log(err && err.stack)
+  console.dir(reply)
+})
+
 app.get('/ttt', function (req, res) {
     res.render('pages/index');
 });
@@ -56,6 +69,21 @@ app.get('/node_modules/jquery/dist/jquery.min.js', function (req, res) {
 
 app.post('/adduser', function (req, res) {
     if (!req.body) return res.sendStatus(400);
+
+    // Check if username is already used
+    User.find({username: req.body.username})
+        .then(function(user){
+            console.log(user)
+        })
+        .catch();
+
+    // Check if email is already used
+    User.find({email: req.body.email})
+        .then(function(user){
+            console.log(user)
+        })
+        .catch();
+
     var key = crypto.randomBytes(32).toString('hex');
     var hash = CryptoJS.AES.encrypt(req.body.password, key).toString();
     
