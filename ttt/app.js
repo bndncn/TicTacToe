@@ -174,6 +174,11 @@ app.post('/login', async function (req, res) {
         return res.send(JSON.stringify(ERROR_STATUS));
     }
     else {
+        if (!usernameResult[0].verified) {
+            console.log('Please verify your account');
+            return res.send(JSON.stringify(ERROR_STATUS));
+        }
+        
         var bytes = CryptoJS.AES.decrypt(usernameResult[0].hash.toString(), usernameResult[0].key);
         var decryptedPassword = bytes.toString(CryptoJS.enc.Utf8);
 
@@ -247,6 +252,10 @@ app.post('/ttt', async function (req, res) {
         var usernameResult = await usernameQuery.exec();
 
         if (usernameResult.length > 0) {
+            if (!usernameResult[0].verified) {
+                return res.render('pages/index');
+            }
+
             var bytes = CryptoJS.AES.decrypt(usernameResult[0].hash.toString(), usernameResult[0].key);
             var decryptedPassword = bytes.toString(CryptoJS.enc.Utf8);
     
@@ -274,3 +283,4 @@ app.post('/ttt/play', function (req, res) {
 });
 
 app.listen(port, () => console.log(`Listening on port ${port}!`));
+
