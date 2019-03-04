@@ -9,10 +9,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "cookie-parser": "^1.4.4",
     "crypto-js": "^3.1.9-1",
     "ejs": "^2.6.1",
     "express": "^4.16.4",
     "jquery": "^3.3.1",
-    "mongoose": "^5.4.16"
+    "mongoose": "^5.4.16",
+    "sendmail": "^1.4.1"
   }
 }
