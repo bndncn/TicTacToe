@@ -14,6 +14,7 @@ var dbURL = 'mongodb://localhost:27017/ttt';
 mongoose.connect(dbURL, { useNewUrlParser: true });
 
 var Schema = mongoose.Schema;
+
 var userSchema = new Schema({
     username: String,
     hash: String,
@@ -22,7 +23,24 @@ var userSchema = new Schema({
     verified: Boolean
 });
 
+var gameSchema = new Schema({
+    token: String,
+    id: int,
+    start_date: Date,
+    grid: [],
+    winner: String
+});
+
+var scoreSchema = new Schema({
+    token: String,
+    human: int,
+    wopr: int,
+    tie: int
+});
+
 var User = mongoose.model('Users', userSchema);
+var Game = mongoose.model('Games', gameSchema);
+var Score = mongoose.model('Scores', scoreSchema);
 
 const app = express();
 const port = 80;
@@ -287,4 +305,3 @@ app.post('/ttt/play', function (req, res) {
 });
 
 app.listen(port, () => console.log(`Listening on port ${port}!`));
-
