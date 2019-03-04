@@ -44,7 +44,7 @@ function emailKey(email, key) {
     });
 }
 
-app.post('/logout', async function (req, res) {
+app.post('/logout', function (req, res) {
     if (req.cookies.token) {
         console.log('clearing cookie');
         res.clearCookie('token');
