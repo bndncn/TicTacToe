@@ -79,14 +79,15 @@ app.post('/listgames', async function (req, res) {
     }
 
     var gameList = [];
-    for(var i = 0; i < cookieResult.length; i++){
-        var gameData = {
-            id: cookieResult[i].id, 
-            start_date: cookieResult[i].start_date
-        };
-        gameList.push(gameData);
+    if(cookieResult.length != 1 || !isGridEmpty(cookieResult[0].grid)){
+        for(var i = 0; i < cookieResult.length; i++){
+            var gameData = {
+                id: cookieResult[i].id, 
+                start_date: cookieResult[i].start_date
+            };
+            gameList.push(gameData);
+        }
     }
-
     var json = {
         status: "OK", 
         "games": gameList
@@ -94,6 +95,15 @@ app.post('/listgames', async function (req, res) {
     
     res.send(JSON.stringify(json));
 });
+
+function isGridEmpty(grid){
+    for(var i = 0; i < grid.length; i++){
+        if(grid[i] != ' '){
+	    return false;
+        }
+    }
+    return true;
+}
 
 app.post('/getgame', async function (req, res) {
     var token = req.cookies.token;
