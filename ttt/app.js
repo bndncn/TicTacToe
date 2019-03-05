@@ -413,7 +413,7 @@ app.post('/ttt/play', async function (req, res) {
                 return processGameEnd(currentGrid, gamesResult, token, currentGame, res);
             }
             else {
-                var json = { "grid": currentGrid, "winner": ' ' };
+                var json = { status:"OK", "grid": currentGrid, "winner": ' ' };
                 console.log(gamesResult[0].grid)
                 console.log(currentGame)
                 gamesResult[currentGame - 1].grid = currentGrid;
@@ -432,7 +432,7 @@ app.post('/ttt/play', async function (req, res) {
 function processGameEnd(grid, gamesResult, token, id, res) {
     if (ttt.isGameDone(grid)) {
         var winner = ttt.getWinner(grid);
-        var json = { "grid": grid, "winner": winner };
+        var json = { status:"OK", "grid": grid, "winner": winner };
         console.log(JSON.stringify(json));
         res.send(JSON.stringify(json));
         gamesResult[id - 1].grid = grid;
