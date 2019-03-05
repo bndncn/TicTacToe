@@ -439,7 +439,7 @@ app.post('/ttt/play', async function (req, res) {
     }
 });
 
-function processGameEnd(grid, gamesResult, token, id, res) {
+async function processGameEnd(grid, gamesResult, token, id, res) {
     if (ttt.isGameDone(grid)) {
         var winner = ttt.getWinner(grid);
         var json = { status:"OK", "grid": grid, "winner": winner };
@@ -449,6 +449,55 @@ function processGameEnd(grid, gamesResult, token, id, res) {
         gamesResult[id - 1].winner = winner;
         gamesResult[id - 1].save();
         createNewGame(token, id + 1);
+
+        var scoresQuery = Score.find({ token: token });
+        var scoresResult = await scoresQuery.exec();
+        
+        if (scoresResult.length == 0) {
+            var human = 0;
+            var wopr = 0;
+            var tie = 0;
+
+            if (winner == 'X') {
+                human++;
+            }
+            else if (winner == 'O') {
+                wopr++;
+            }
+            else {
+                tie++;
+            }
+
+            var score = {
+                token: token,
+                human: human,
+                wopr: wopr,
+                tie: tie
+            } 
+
+            console.log(score);
+
+            var data = new Score(score);
+            data.save();  
+        }
+        else {
+            var human = scoresResult[0].human;
+            var wopr = scoresResult[0].wopr;
+            var tie = scoresResult[0].tie;
+            
+            if (winner == 'X') {
+                scoresResult[0].human = human + 1;
+            }
+            else if (winner == 'O') {
+                scoresResult[0].wopr = wopr + 1;
+            }
+            else {
+                scoresResult[0].tie = tie + 1;
+            }
+
+            scoresResult[0].save();
+            console.log(scoresResult[0]);
+        }
     }    
 }
 
