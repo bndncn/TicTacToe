@@ -219,6 +219,7 @@ app.post('/adduser', async function (req, res) {
     var data = new User(user);
     data.save();
     emailKey(req.body.email, key);
+    createNewGame(key, 1);
     res.send(JSON.stringify(OK_STATUS));
 });
 
@@ -352,7 +353,16 @@ app.post('/ttt', async function (req, res) {
 
             if (decryptedPassword === password) {
                 return res.render('pages/ttt_game', {
-                    hellomsg: helloMsg
+                    hellomsg: helloMsg,
+                    cell0: ' ',
+                    cell1: ' ',
+                    cell2: ' ',
+                    cell3: ' ',
+                    cell4: ' ',
+                    cell5: ' ',
+                    cell6: ' ',
+                    cell7: ' ',
+                    cell8: ' ',
                 });
             }
             else {
@@ -380,7 +390,7 @@ app.post('/ttt/play', async function (req, res) {
             winner = gamesResult[gamesResult.length - 1].winner;
             currentGame = gamesResult.length;
         }
-        else {
+        else if (currentGame != 1) {
             console.log(currentGame);
             createNewGame(token, currentGame);
             currentGrid = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '];
