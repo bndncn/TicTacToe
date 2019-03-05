@@ -3,9 +3,10 @@ $(document).ready(function() {
         $(this).click(function() {
             if ($(this).html() != 'X' && $(this).html() != 'O') {
                 $(this).text('X');
+                var moveIndex = 3 * $(this).closest("tr").index() + $(this).closest("td").index();
                 $.ajax({
                     type: 'POST',
-                    data: {grid: getGrid(), winner: ' '},
+                    data: {move: moveIndex},
                     url: '/ttt/play',
                     complete: function(data) {
                         var obj = JSON.parse(data.responseText)
@@ -46,3 +47,4 @@ function redrawBoard(grid) {
         }
     }    
 }
+

@@ -14,6 +14,7 @@ var dbURL = 'mongodb://localhost:27017/ttt';
 mongoose.connect(dbURL, { useNewUrlParser: true });
 
 var Schema = mongoose.Schema;
+
 var userSchema = new Schema({
     username: String,
     hash: String,
@@ -22,7 +23,24 @@ var userSchema = new Schema({
     verified: Boolean
 });
 
+var gameSchema = new Schema({
+    token: String,
+    id: Number,
+    start_date: String,
+    grid: [String, String, String, String, String, String, String, String, String],
+    winner: String
+});
+
+var scoreSchema = new Schema({
+    token: String,
+    human: Number,
+    wopr: Number,
+    tie: Number
+});
+
 var User = mongoose.model('Users', userSchema);
+var Game = mongoose.model('Games', gameSchema);
+var Score = mongoose.model('Scores', scoreSchema);
 
 const app = express();
 const port = 80;
@@ -44,24 +62,94 @@ function emailKey(email, key) {
     });
 }
 
+async function createNewGame(token, id) {
+    var game = {
+        token: token,
+        id: id,
+        start_date: ttt.getDate(),
+        grid: [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        winner: ' '
+    }
+
+    console.log('Created a new game');
+
+    var data = new Game(game);
+    data.save();     
+}
+
+/**
+ * 
+ * Checks if there's an unfinished game in progress.
+ * If there is none, it returns the next game's ID (new game to be created).
+ * If there is an unfinished game, it returns -1.
+ */
+async function getCurrentGame(token) {
+    var gamesQuery = Game.find({ token: token });
+    var gamesResult = await gamesQuery.exec();
+    // No games were ever played
+    if (gamesResult.length == 0) {
+        return 1;    
+    }
+    else {
+        var lastGame = gamesResult[gamesResult.length - 1];
+        // If no one won in the last game, return -1. Else, return the next game's ID.
+        return lastGame.winner == ' ' ? -1 : gamesResult.length;
+        
+    }
+}
+
+app.post('/logout', function (req, res) {
+    if (req.cookies.token) {
+        console.log('clearing cookie');
+        res.clearCookie('token');
+        res.send(JSON.stringify(OK_STATUS));
+    } else {
+        console.log('logout without valid cookie');
+        res.send(JSON.stringify(ERROR_STATUS));
+    }
+});
+
 app.get('/ttt', async function (req, res) {
     if (req.cookies.token) {
         console.log('token = ' + req.cookies.token);
         var cookieQuery = User.find({ key: req.cookies.token });
         var cookieResult = await cookieQuery.exec();
-
-        // if user somehow has invalid token, just for testing now
-        if (cookieResult.length == 0) {
-            console.log('somehow bad token');
-            return res.send(JSON.stringify(ERROR_STATUS));
-        }
-
         var helloMsg = ttt.createHelloMsg(cookieResult[0].username);
         console.log(helloMsg);
-        res.render('pages/ttt_game', {
-            hellomsg: helloMsg
-        });
-    } else {
+        var currentGame = getCurrentGame(req.cookies.token);
+        if (currentGame != -1) {
+            res.render('pages/ttt_game', {
+                hellomsg: helloMsg,
+                cell0: ' ',
+                cell1: ' ',
+                cell2: ' ',
+                cell3: ' ',
+                cell4: ' ',
+                cell5: ' ',
+                cell6: ' ',
+                cell7: ' ',
+                cell8: ' ',
+            });
+        }
+        else {
+            var gamesQuery = Game.find({ token: token });
+            var gamesResult = await gamesQuery.exec();
+            var grid = gamesResult[gamesResult.length - 1].grid;
+            res.render('pages/ttt_game', {
+                hellomsg: helloMsg,
+                cell0: grid[0],
+                cell1: grid[1],
+                cell2: grid[2],
+                cell3: grid[3],
+                cell4: grid[4],
+                cell5: grid[5],
+                cell6: grid[6],
+                cell7: grid[7],
+                cell8: grid[8],
+            });
+        }
+    } 
+    else {
         res.render('pages/index');
     }
 });
@@ -97,7 +185,7 @@ app.post('/adduser', async function (req, res) {
     var password = req.body.password;
     var email = req.body.email;
 
-    var usernameQuery = User.find({ username: username });      
+    var usernameQuery = User.find({ username: username });
     var usernameResult = await usernameQuery.exec();
 
     // Check if username is already used
@@ -106,10 +194,10 @@ app.post('/adduser', async function (req, res) {
         return res.send(JSON.stringify(ERROR_STATUS));
     }
 
-    var emailQuery = User.find({ email: email });      
+    var emailQuery = User.find({ email: email });
     var emailResult = await emailQuery.exec();
     console.log();
-    
+
     // Check if email is already used
     if (emailResult.length > 0) {
         console.log(email + ' has been already used. Please use a different email.');
@@ -123,11 +211,11 @@ app.post('/adduser', async function (req, res) {
         hash: hash,
         email: email,
         key: key,
-        verified: false        
+        verified: false
     }
-    
+
     console.log(user);
-    
+
     var data = new User(user);
     data.save();
     emailKey(req.body.email, key);
@@ -155,10 +243,10 @@ app.post('/verify', async function (req, res) {
             return res.send(JSON.stringify(OK_STATUS));
         }
         else {
-            console.log('Failed to Validate'); 
-            return res.send(JSON.stringify(ERROR_STATUS));  
-        }   
-    } 
+            console.log('Failed to Validate');
+            return res.send(JSON.stringify(ERROR_STATUS));
+        }
+    }
 });
 
 app.post('/login', async function (req, res) {
@@ -178,7 +266,7 @@ app.post('/login', async function (req, res) {
             console.log('Please verify your account');
             return res.send(JSON.stringify(ERROR_STATUS));
         }
-        
+
         var bytes = CryptoJS.AES.decrypt(usernameResult[0].hash.toString(), usernameResult[0].key);
         var decryptedPassword = bytes.toString(CryptoJS.enc.Utf8);
 
@@ -201,10 +289,10 @@ app.post('/ttt', async function (req, res) {
     if (body.hasOwnProperty('key')) {
         var email = req.body.email;
         var key = req.body.key;
-        
-        var emailQuery = User.find({email: email});
+
+        var emailQuery = User.find({ email: email });
         var emailResult = await emailQuery.exec();
-        
+
         if (emailResult.length > 0) {
             // Go back to home page if verification is successful
             if (key == emailResult[0].key || key == 'abracadabra') {
@@ -212,29 +300,29 @@ app.post('/ttt', async function (req, res) {
             }
             else {
                 return res.render('pages/verify');
-            }            
+            }
         }
         else {
             return res.render('pages/verify');
-        } 
+        }
     }
     // If Sign Up form was submitted
     else if (body.hasOwnProperty('email')) {
         var username = req.body.username;
-        var email = req.body.email;   
+        var email = req.body.email;
 
-        var usernameQuery = User.find({ username: username });      
+        var usernameQuery = User.find({ username: username });
         var usernameResult = await usernameQuery.exec();
-    
+
         // Go back to home page if username is already used
         if (usernameResult.length > 0 && usernameResult[0].verified) {
             return res.render('pages/index');
         }
-       
-	var emailQuery = User.find({ email: email });      
+
+        var emailQuery = User.find({ email: email });
         var emailResult = await emailQuery.exec();
-        
-	// Go back to home page if email is already used
+
+        // Go back to home page if email is already used
         if (emailResult.length > 0 && emailResult[0].verified) {
             return res.render('pages/index');
         }
@@ -247,7 +335,7 @@ app.post('/ttt', async function (req, res) {
     else {
         var username = req.body.username;
         var password = req.body.password;
-        
+
         var usernameQuery = User.find({ username: username });
         var usernameResult = await usernameQuery.exec();
 
@@ -258,14 +346,14 @@ app.post('/ttt', async function (req, res) {
 
             var bytes = CryptoJS.AES.decrypt(usernameResult[0].hash.toString(), usernameResult[0].key);
             var decryptedPassword = bytes.toString(CryptoJS.enc.Utf8);
-    
+
             var helloMsg = ttt.createHelloMsg(username);
             console.log(helloMsg);
 
             if (decryptedPassword === password) {
                 return res.render('pages/ttt_game', {
                     hellomsg: helloMsg
-                });                
+                });
             }
             else {
                 return res.render('pages/index');
@@ -274,13 +362,84 @@ app.post('/ttt', async function (req, res) {
     }
 });
 
-app.post('/ttt/play', function (req, res) {
+app.post('/ttt/play', async function (req, res) {
     if (!req.body) return res.sendStatus(400);
-    var winner = ttt.bestAIMove(req.body.grid);
-    var json = { "grid": req.body.grid, "winner": winner };
-    console.log(JSON.stringify(json));
-    res.send(JSON.stringify(json));
+    var token = req.cookies.token;
+
+    if (token) {
+        var currentGame = await getCurrentGame(token);
+        var moveIndex = req.body.move;
+        var currentGrid, winner;
+        
+        var gamesQuery = Game.find({ token: token });
+        var gamesResult = await gamesQuery.exec();
+
+        // If no one won in the last game, continue the game
+        if (currentGame == -1) {
+            currentGrid = gamesResult[gamesResult.length - 1].grid;
+            winner = gamesResult[gamesResult.length - 1].winner;
+            currentGame = gamesResult.length;
+        }
+        else {
+            console.log(currentGame);
+            createNewGame(token, currentGame);
+            currentGrid = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '];
+            winner = ' ';
+        }
+
+        gamesQuery = Game.find({ token: token });
+        gamesResult = await gamesQuery.exec();
+        console.log(moveIndex);
+
+        if (moveIndex == null) {
+            var json = { "grid": currentGrid, "winner": winner };
+            return res.send(JSON.stringify(json));
+        }
+        else if (currentGrid[moveIndex] != ' ') {
+            console.log('Please select an empty square.')
+            return res.send(JSON.stringify(ERROR_STATUS));
+        }
+        else {
+            currentGrid[moveIndex] = 'X'; // Make the move
+
+            // If game is done
+            if (ttt.isGameDone(currentGrid)) {
+                return processGameEnd(currentGrid, gamesResult, token, currentGame, res);
+            }
+
+            ttt.bestAIMove(currentGrid);
+
+            if (ttt.isGameDone(currentGrid)) {
+                return processGameEnd(currentGrid, gamesResult, token, currentGame, res);
+            }
+            else {
+                var json = { "grid": currentGrid, "winner": ' ' };
+                console.log(gamesResult[0].grid)
+                console.log(currentGame)
+                gamesResult[currentGame - 1].grid = currentGrid;
+                gamesResult[currentGame - 1].save();
+                console.log(JSON.stringify(json));
+                return res.send(JSON.stringify(json));
+            }
+        }
+    }
+    else {
+        console.log('Please log in to play.');
+        return res.send(JSON.stringify(ERROR_STATUS));
+    }
 });
 
-app.listen(port, () => console.log(`Listening on port ${port}!`));
+function processGameEnd(grid, gamesResult, token, id, res) {
+    if (ttt.isGameDone(grid)) {
+        var winner = ttt.getWinner(grid);
+        var json = { "grid": grid, "winner": winner };
+        console.log(JSON.stringify(json));
+        res.send(JSON.stringify(json));
+        gamesResult[id - 1].grid = grid;
+        gamesResult[id - 1].winner = winner;
+        gamesResult[id - 1].save();
+        createNewGame(token, id + 1);
+    }    
+}
 
+app.listen(port, () => console.log(`Listening on port ${port}!`));

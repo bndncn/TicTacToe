@@ -121,10 +121,7 @@ function isWinPossible(grid, player) {
 
 }
 
-function bestAIMove(grid) {
-    if (isGameDone(grid))
-        return getWinner(grid);
-    
+function bestAIMove(grid) {   
     if (numTurns(grid) == 1 && grid[4] == ' ')
         grid[4] = 'O'; // If center is empty, place an O there
     else if (numTurns(grid) == 1 && grid[4] == 'X')
@@ -137,11 +134,7 @@ function bestAIMove(grid) {
                 selectRandom(grid);
             }
         }     
-    }
-
-    if (isGameDone(grid))
-        return getWinner(grid);
-    
+    }  
 }
 
 function findWin(grid) {
@@ -182,3 +175,6 @@ function selectRandom(grid) {
 
 module.exports.bestAIMove = bestAIMove;
 module.exports.createHelloMsg = createHelloMsg;
+module.exports.getDate = getDate;
+module.exports.isGameDone = isGameDone;
+module.exports.getWinner = getWinner;
