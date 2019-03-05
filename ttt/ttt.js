@@ -47,7 +47,7 @@ function checkCols(grid) {
         }
 
         if (hasWon)
-            return grid[BOARD_SIZE * i];
+            return grid[start];
     }
     return ' '; // No one has won yet
 }

@@ -309,6 +309,7 @@ app.post('/adduser', async function (req, res) {
     var data = new User(user);
     data.save();
     emailKey(req.body.email, key);
+    createNewGame(key, 1);
     res.send(JSON.stringify(OK_STATUS));
 });
 
@@ -442,7 +443,16 @@ app.post('/ttt', async function (req, res) {
 
             if (decryptedPassword === password) {
                 return res.render('pages/ttt_game', {
-                    hellomsg: helloMsg
+                    hellomsg: helloMsg,
+                    cell0: ' ',
+                    cell1: ' ',
+                    cell2: ' ',
+                    cell3: ' ',
+                    cell4: ' ',
+                    cell5: ' ',
+                    cell6: ' ',
+                    cell7: ' ',
+                    cell8: ' ',
                 });
             }
             else {
@@ -470,7 +480,7 @@ app.post('/ttt/play', async function (req, res) {
             winner = gamesResult[gamesResult.length - 1].winner;
             currentGame = gamesResult.length;
         }
-        else {
+        else if (currentGame != 1) {
             console.log(currentGame);
             createNewGame(token, currentGame);
             currentGrid = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '];
@@ -519,7 +529,7 @@ app.post('/ttt/play', async function (req, res) {
     }
 });
 
-function processGameEnd(grid, gamesResult, token, id, res) {
+async function processGameEnd(grid, gamesResult, token, id, res) {
     if (ttt.isGameDone(grid)) {
         var winner = ttt.getWinner(grid);
         var json = { status:"OK", "grid": grid, "winner": winner };
@@ -529,6 +539,55 @@ function processGameEnd(grid, gamesResult, token, id, res) {
         gamesResult[id - 1].winner = winner;
         gamesResult[id - 1].save();
         createNewGame(token, id + 1);
+
+        var scoresQuery = Score.find({ token: token });
+        var scoresResult = await scoresQuery.exec();
+        
+        if (scoresResult.length == 0) {
+            var human = 0;
+            var wopr = 0;
+            var tie = 0;
+
+            if (winner == 'X') {
+                human++;
+            }
+            else if (winner == 'O') {
+                wopr++;
+            }
+            else {
+                tie++;
+            }
+
+            var score = {
+                token: token,
+                human: human,
+                wopr: wopr,
+                tie: tie
+            } 
+
+            console.log(score);
+
+            var data = new Score(score);
+            data.save();  
+        }
+        else {
+            var human = scoresResult[0].human;
+            var wopr = scoresResult[0].wopr;
+            var tie = scoresResult[0].tie;
+            
+            if (winner == 'X') {
+                scoresResult[0].human = human + 1;
+            }
+            else if (winner == 'O') {
+                scoresResult[0].wopr = wopr + 1;
+            }
+            else {
+                scoresResult[0].tie = tie + 1;
+            }
+
+            scoresResult[0].save();
+            console.log(scoresResult[0]);
+        }
     }    
 }
 
