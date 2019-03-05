@@ -62,6 +62,96 @@ function emailKey(email, key) {
     });
 }
 
+app.post('/listgames', async function (req, res) {
+    var token = req.cookies.token;
+
+    if(!token){
+        console.log('failure to listgames: empty cookie');
+        return res.send(JSON.stringify(ERROR_STATUS));
+    }
+
+    var cookieQuery = Game.find({ token: token });
+    var cookieResult = await cookieQuery.exec();
+
+    if(cookieResult.length == 0){
+        console.log('failure to listgames: no game found for token');
+        return res.send(JSON.stringify(ERROR_STATUS));
+    }
+
+    var gameList = [];
+    for(var i = 0; i < cookieResult.length; i++){
+        var gameData = {
+            id: cookieResult[i].id, 
+            start_date: cookieResult[i].start_date
+        };
+        gameList.push(gameData);
+    }
+
+    var json = {
+        status: "OK", 
+        "games": gameList
+    };
+    
+    res.send(JSON.stringify(json));
+});
+
+app.post('/getgame', async function (req, res) {
+    var token = req.cookies.token;
+    var gameId = req.body.id;
+
+    if(!token){
+        console.log('failure to getgame: empty cookie');
+        return res.send(JSON.stringify(ERROR_STATUS));
+    }
+
+    if(!gameId){
+        console.log('failure to getgame: missing id');
+        return res.send(JSON.stringify(ERROR_STATUS));
+    }
+
+    var cookieQuery = Game.find({ token: token, id: gameId });
+    var cookieResult = await cookieQuery.exec();
+
+    if(cookieResult.length == 0){
+        console.log('failure to getgame');
+        return res.send(JSON.stringify(ERROR_STATUS));
+    }
+    
+    var json = {
+        status: "OK", 
+        "grid": cookieResult[0].grid, 
+        "winner": cookieResult[0].winner
+    };
+
+    res.send(JSON.stringify(json));
+});
+
+app.post('/getscore', async function (req, res) {
+    var token = req.cookies.token;
+
+    if(!token){
+        console.log('failure to getscore: empty cookie');
+        return res.send(JSON.stringify(ERROR_STATUS));
+    }
+
+    var cookieQuery = Score.find({ token: token });
+    var cookieResult = await cookieQuery.exec();
+
+    if(cookieResult.length == 0){
+        console.log('failure to getscore: score not found');
+        return res.send(JSON.stringify(ERROR_STATUS));
+    }
+    
+    var json = {
+        status: "OK", 
+        "human": cookieResult[0].human, 
+        "wopr": cookieResult[0].wopr, 
+        "tie": cookieResult[0].tie
+    };
+
+    res.send(JSON.stringify(json));
+});
+
 async function createNewGame(token, id) {
     var game = {
         token: token,
